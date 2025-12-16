@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
 }
 
 repositories {
@@ -24,3 +25,30 @@ tasks.withType(Test) {
     systemProperty "file.encoding", "UTF-8"
 }
 
+// Конфигурация JaCoCo
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+jacocoTestReport {
+    reports {
+        xml.required = true    // XML нужен для Jenkins
+        html.required = true   // HTML для локального просмотра
+        csv.required = false
+    }
+
+    // Исключаем тесты из отчёта о покрытии
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/*Test*.class',      // исключаем тестовые классы
+                    '**/test/**/*.class'    // исключаем тестовые пакеты
+            ])
+        }))
+    }
+}
+
+// Гарантируем, что отчёт создаётся после тестов
+test {
+    finalizedBy jacocoTestReport
+}
